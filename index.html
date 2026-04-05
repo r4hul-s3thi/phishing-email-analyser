@@ -1,225 +1,111 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>PhishGuard — Phishing Email Analyser</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="style.css"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PhishGuard — Email Phishing Analyser</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <!-- Ambient background -->
-  <div class="bg-wrap">
-    <div class="bg-grid"></div>
-    <div class="bg-glow glow-1"></div>
-    <div class="bg-glow glow-2"></div>
-  </div>
+  <div class="noise"></div>
 
-  <!-- Nav -->
-  <nav>
-    <div class="nav-inner">
-      <div class="logo">
-        <div class="logo-shield">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-            <path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z" fill="url(#sg)" stroke="none"/>
-            <path d="M9 12l2 2 4-4" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            <defs>
-              <linearGradient id="sg" x1="3" y1="2" x2="21" y2="23">
-                <stop offset="0%" stop-color="#6366f1"/>
-                <stop offset="100%" stop-color="#06b6d4"/>
-              </linearGradient>
-            </defs>
-          </svg>
-        </div>
-        <span>Phish<span class="accent">Guard</span></span>
+  <header>
+    <div class="header-inner">
+      <div class="brand">
+        <svg class="brand-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z" fill="#6366f1"/>
+          <path d="M9 12l2 2 4-4" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        PhishGuard
       </div>
-      <div class="nav-badge">100% Client-Side · No Data Sent</div>
+      <span class="header-note">runs in your browser · no data sent</span>
     </div>
-  </nav>
+  </header>
 
-  <!-- Hero -->
-  <section class="hero">
-    <div class="hero-tag">
-      <span class="tag-dot"></span>
-      Free Phishing Detection Tool
-    </div>
-    <h1>Is That Email <span class="gradient-text">Trying to Scam You?</span></h1>
-    <p class="hero-sub">Paste any suspicious email and get an instant AI-style threat score with a full breakdown of phishing indicators — all in your browser.</p>
-    <div class="hero-stats">
-      <div class="stat"><span class="stat-num">11</span><span class="stat-label">Indicators Checked</span></div>
-      <div class="stat-div"></div>
-      <div class="stat"><span class="stat-num">100%</span><span class="stat-label">Private & Offline</span></div>
-      <div class="stat-div"></div>
-      <div class="stat"><span class="stat-num">&lt;1s</span><span class="stat-label">Instant Results</span></div>
-    </div>
-  </section>
-
-  <!-- Tool -->
   <main>
-    <div id="toolCard" class="tool-card">
-
-      <!-- Steps indicator -->
-      <div class="steps">
-        <div class="step active" id="step1">
-          <div class="step-num">1</div>
-          <span>Paste Email</span>
-        </div>
-        <div class="step-line"></div>
-        <div class="step" id="step2">
-          <div class="step-num">2</div>
-          <span>Analyse</span>
-        </div>
-        <div class="step-line"></div>
-        <div class="step" id="step3">
-          <div class="step-num">3</div>
-          <span>Results</span>
-        </div>
-      </div>
-
-      <!-- Input Panel -->
-      <div id="inputPanel">
-        <div class="input-grid">
-          <div class="input-group span-2">
-            <label for="body">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-              Email Body
-              <span class="required-badge">Required</span>
-            </label>
-            <textarea id="body" rows="7" placeholder="Paste the full email body here...
-
-Example:
-Subject: [GitHub] Unauthorized access detected on your account
-Dear user, we have detected suspicious activity. Click immediately to verify:
-http://github-login.xyz/verify?token=abc123
-Failure to act within 24 hours will result in account suspension."></textarea>
-          </div>
-
-          <div class="input-group">
-            <label for="headers">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h7"/></svg>
-              Email Headers
-              <span class="optional-badge">Optional</span>
-            </label>
-            <textarea id="headers" rows="5" placeholder="Paste raw headers here...
-
-From: noreply@github-secure.com
-Received-SPF: fail
-DKIM-Signature: v=1; a=rsa-sha256...
-Reply-To: attacker@evil.com"></textarea>
-          </div>
-
-          <div class="input-group">
-            <label for="sender">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-              Sender Address
-              <span class="optional-badge">Optional</span>
-            </label>
-            <input type="text" id="sender" placeholder="e.g. noreply@github-secure.com"/>
-            <p class="field-hint">Helps detect lookalike / spoofed domains</p>
-
-            <div class="tip-box">
-              <div class="tip-title">💡 Pro Tip</div>
-              <div class="tip-body">For best results, paste the full raw headers. In Gmail: ⋮ → Show original. In Outlook: File → Properties.</div>
-            </div>
-          </div>
-        </div>
-
-        <button id="analyseBtn" onclick="analyse()">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          Analyse Email
-        </button>
-      </div>
-
-      <!-- Results Panel -->
-      <div id="resultsPanel" class="hidden">
-
-        <!-- Verdict Banner -->
-        <div id="verdictBanner" class="verdict-banner">
-          <div class="verdict-left">
-            <div id="verdictIcon" class="verdict-emoji">🛡️</div>
-            <div>
-              <div id="verdictLabel" class="verdict-title">Analysing...</div>
-              <div id="verdictDesc" class="verdict-sub"></div>
-            </div>
-          </div>
-          <div class="score-pill">
-            <div class="score-ring-wrap">
-              <svg viewBox="0 0 80 80">
-                <circle class="ring-track" cx="40" cy="40" r="32"/>
-                <circle class="ring-progress" id="ringFill" cx="40" cy="40" r="32"
-                  stroke-dasharray="201" stroke-dashoffset="201"/>
-              </svg>
-              <div class="score-center">
-                <span id="scoreNum">0</span>
-                <small>/100</small>
-              </div>
-            </div>
-            <div class="score-label">Threat Score</div>
-          </div>
-        </div>
-
-        <!-- Triggered Findings -->
-        <div class="section-header">
-          <div class="section-title">
-            <span id="triggeredCount" class="count-badge red">0</span>
-            Triggered Indicators
-          </div>
-        </div>
-        <div id="findingsGrid" class="findings-grid"></div>
-
-        <!-- Full Breakdown -->
-        <div class="section-header" style="margin-top:1.5rem">
-          <div class="section-title">Full Indicator Breakdown</div>
-          <div class="legend">
-            <span class="legend-dot red"></span>Triggered
-            <span class="legend-dot green" style="margin-left:0.75rem"></span>Clear
-          </div>
-        </div>
-        <div id="indicatorList" class="indicator-table"></div>
-
-        <button class="reset-btn" onclick="reset()">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-          Analyse Another Email
-        </button>
-      </div>
-
+    <div class="page-title">
+      <h1>Phishing Email Analyser</h1>
+      <p>Paste a suspicious email below. We check it against 11 phishing indicators and give you a threat score.</p>
     </div>
 
-    <!-- How it works -->
-    <div class="how-section">
-      <div class="how-title">How PhishGuard Works</div>
-      <div class="how-grid">
-        <div class="how-card">
-          <div class="how-icon">📋</div>
-          <div class="how-name">Paste Email</div>
-          <div class="how-desc">Drop in the email body, headers, and sender address.</div>
+    <div id="inputView">
+      <div class="form-layout">
+        <div class="field full">
+          <label for="body">Email body <span class="req">*</span></label>
+          <textarea id="body" rows="9" placeholder="Paste the full email text here..."></textarea>
         </div>
-        <div class="how-arrow">→</div>
-        <div class="how-card">
-          <div class="how-icon">🔬</div>
-          <div class="how-name">11 Checks Run</div>
-          <div class="how-desc">SPF, DKIM, DMARC, URLs, urgency, spoofing & more.</div>
+
+        <div class="field">
+          <label for="headers">Raw headers <span class="opt">optional</span></label>
+          <textarea id="headers" rows="6" placeholder="From: noreply@github-secure.com&#10;Received-SPF: fail&#10;DKIM-Signature: v=1; ...&#10;Reply-To: attacker@evil.com"></textarea>
+          <small>Gmail: ⋮ → Show original &nbsp;·&nbsp; Outlook: File → Properties</small>
         </div>
-        <div class="how-arrow">→</div>
-        <div class="how-card">
-          <div class="how-icon">📊</div>
-          <div class="how-name">Threat Score</div>
-          <div class="how-desc">Get a 0–100 score with a full breakdown instantly.</div>
+
+        <div class="field">
+          <label for="sender">Sender address <span class="opt">optional</span></label>
+          <input type="text" id="sender" placeholder="e.g. noreply@github-secure.com" />
+          <small>Helps catch lookalike domains</small>
+
+          <div class="checks-preview">
+            <div class="checks-title">What gets checked</div>
+            <ul>
+              <li>SPF / DKIM / DMARC failures</li>
+              <li>Spoofed &amp; lookalike domains</li>
+              <li>Suspicious or shortened URLs</li>
+              <li>Urgency &amp; scare language</li>
+              <li>Credential harvesting phrases</li>
+              <li>Reply-To mismatch</li>
+              <li>Dangerous attachments</li>
+              <li>HTML / unicode obfuscation</li>
+            </ul>
+          </div>
         </div>
       </div>
+
+      <button id="analyseBtn" onclick="analyse()">Analyse Email</button>
+    </div>
+
+    <div id="resultsView" class="hidden">
+      <div id="verdict" class="verdict">
+        <div class="verdict-score">
+          <svg viewBox="0 0 100 100">
+            <circle class="track" cx="50" cy="50" r="42"/>
+            <circle class="fill" id="ringFill" cx="50" cy="50" r="42"
+              stroke-dasharray="264" stroke-dashoffset="264"/>
+          </svg>
+          <div class="score-label">
+            <span id="scoreNum">0</span>
+            <small>/100</small>
+          </div>
+        </div>
+        <div class="verdict-info">
+          <div id="verdictIcon" class="v-icon"></div>
+          <div id="verdictLabel" class="v-label"></div>
+          <div id="verdictDesc" class="v-desc"></div>
+        </div>
+      </div>
+
+      <div id="triggered" class="section">
+        <div class="section-label">Triggered <span id="tCount" class="badge-num"></span></div>
+        <div id="triggeredList" class="card-list"></div>
+      </div>
+
+      <div class="section">
+        <div class="section-label">All indicators</div>
+        <div id="allList" class="indicator-list"></div>
+      </div>
+
+      <button class="back-btn" onclick="reset()">← Check another email</button>
     </div>
   </main>
 
   <footer>
-    <div class="footer-inner">
-      <div class="footer-logo">
-        <span>Phish<span class="accent">Guard</span></span>
-      </div>
-      <p>Runs 100% in your browser. No data is ever sent to any server.</p>
-      <p>Built by <a href="https://github.com/r4hul-s3thi" target="_blank">r4hul-s3thi</a> · Open Source on <a href="https://github.com/r4hul-s3thi/phishing-email-analyser" target="_blank">GitHub</a></p>
-    </div>
+    <span>Built by <a href="https://github.com/r4hul-s3thi" target="_blank">r4hul-s3thi</a></span>
+    <span>·</span>
+    <a href="https://github.com/r4hul-s3thi/phishing-email-analyser" target="_blank">Source on GitHub</a>
   </footer>
 
   <script src="analyser.js"></script>
