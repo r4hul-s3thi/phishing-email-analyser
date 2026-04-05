@@ -62,8 +62,7 @@ const INDICATORS = [
         'your account will be', 'action required', 'confirm your identity',
         'click here to restore', 'failure to', 'within 24 hours', 'within 48 hours'
       ];
-      const lower = body.toLowerCase();
-      return triggers.filter(t => lower.includes(t)).length >= 2;
+      return triggers.filter(t => body.toLowerCase().includes(t)).length >= 2;
     }
   },
   {
@@ -72,7 +71,7 @@ const INDICATORS = [
     weight: 20,
     severity: 'high',
     icon: '🔗',
-    desc: 'Email contains shortened, obfuscated, or suspicious URLs.',
+    desc: 'Email contains shortened, obfuscated, or IP-based URLs.',
     check: ({ body }) => {
       const shorteners = /\b(bit\.ly|tinyurl|t\.co|goo\.gl|ow\.ly|rb\.gy|cutt\.ly|is\.gd|buff\.ly)\b/i;
       const suspiciousUrl = /https?:\/\/[^\s]*(-login|-verify|-secure|-account|-update|-confirm)[^\s]*/i;
@@ -88,14 +87,13 @@ const INDICATORS = [
     icon: '🪤',
     desc: 'Email asks for passwords, OTPs, card numbers, or personal information.',
     check: ({ body }) => {
-      const lower = body.toLowerCase();
       const terms = [
         'enter your password', 'confirm your password', 'enter your otp',
         'credit card', 'card number', 'social security', 'bank account',
         'enter your pin', 'verify your identity', 'provide your details',
         'update your payment', 'billing information'
       ];
-      return terms.some(t => lower.includes(t));
+      return terms.some(t => body.toLowerCase().includes(t));
     }
   },
   {
@@ -109,9 +107,7 @@ const INDICATORS = [
       const fromMatch = headers.match(/^from:.*?([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-z]{2,})/im);
       const replyMatch = headers.match(/^reply-to:.*?([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-z]{2,})/im);
       if (!fromMatch || !replyMatch) return false;
-      const fromDomain = fromMatch[1].split('@')[1].toLowerCase();
-      const replyDomain = replyMatch[1].split('@')[1].toLowerCase();
-      return fromDomain !== replyDomain;
+      return fromMatch[1].split('@')[1].toLowerCase() !== replyMatch[1].split('@')[1].toLowerCase();
     }
   },
   {
@@ -121,11 +117,9 @@ const INDICATORS = [
     severity: 'low',
     icon: '👤',
     desc: 'Uses generic greetings like "Dear Customer" instead of your real name.',
-    check: ({ body }) => {
-      const lower = body.toLowerCase();
-      return ['dear customer', 'dear user', 'dear account holder',
-        'dear valued', 'hello user', 'hi customer'].some(g => lower.includes(g));
-    }
+    check: ({ body }) =>
+      ['dear customer', 'dear user', 'dear account holder', 'dear valued', 'hello user', 'hi customer']
+        .some(g => body.toLowerCase().includes(g))
   },
   {
     id: 'attachment_warning',
@@ -134,8 +128,7 @@ const INDICATORS = [
     severity: 'medium',
     icon: '📎',
     desc: 'Email references potentially dangerous file types (.exe, .zip, .docm, etc.).',
-    check: ({ body }) =>
-      /\.(exe|zip|rar|docm|xlsm|js|vbs|bat|cmd|ps1|iso|img)\b/i.test(body)
+    check: ({ body }) => /\.(exe|zip|rar|docm|xlsm|js|vbs|bat|cmd|ps1|iso|img)\b/i.test(body)
   },
   {
     id: 'html_obfuscation',
@@ -150,60 +143,72 @@ const INDICATORS = [
   }
 ];
 
-// ─── Scoring & Verdict ───────────────────────────────────────────────────────
+// ─── Verdict Config ──────────────────────────────────────────────────────────
 
 function getVerdict(score) {
   if (score >= 70) return {
     label: 'Likely Phishing',
-    desc: 'Multiple strong phishing indicators detected. Do NOT click any links or provide any information.',
+    desc: 'Multiple strong phishing indicators detected. Do NOT click any links or provide any information. Report and delete this email.',
     icon: '🚨',
-    color: 'var(--red)'
+    color: 'var(--red)',
+    bannerBg: 'rgba(239,68,68,0.07)',
+    bannerBorder: 'rgba(239,68,68,0.2)'
   };
   if (score >= 40) return {
     label: 'Suspicious',
-    desc: 'Several warning signs found. Treat this email with caution and verify through official channels.',
+    desc: 'Several warning signs found. Treat this email with caution and verify through official channels before taking any action.',
     icon: '⚠️',
-    color: 'var(--yellow)'
+    color: 'var(--yellow)',
+    bannerBg: 'rgba(245,158,11,0.07)',
+    bannerBorder: 'rgba(245,158,11,0.2)'
   };
   if (score >= 15) return {
     label: 'Low Risk',
-    desc: 'A few minor indicators found. Likely safe, but stay alert.',
+    desc: 'A few minor indicators found. Likely safe, but always verify the sender before clicking links.',
     icon: '🔎',
-    color: 'var(--accent)'
+    color: 'var(--accent)',
+    bannerBg: 'rgba(6,182,212,0.06)',
+    bannerBorder: 'rgba(6,182,212,0.15)'
   };
   return {
     label: 'Looks Clean',
-    desc: 'No significant phishing indicators detected. Always stay cautious.',
+    desc: 'No significant phishing indicators detected. Always stay cautious with unexpected emails.',
     icon: '🛡️',
-    color: 'var(--green)'
+    color: 'var(--green)',
+    bannerBg: 'rgba(16,185,129,0.06)',
+    bannerBorder: 'rgba(16,185,129,0.15)'
   };
 }
 
-// ─── Main Analyse Function ───────────────────────────────────────────────────
+// ─── Analyse ─────────────────────────────────────────────────────────────────
 
 function analyse() {
   const headers = document.getElementById('headers').value.trim();
-  const body = document.getElementById('body').value.trim();
-  const sender = document.getElementById('sender').value.trim();
+  const body    = document.getElementById('body').value.trim();
+  const sender  = document.getElementById('sender').value.trim();
 
   if (!body) {
-    alert('Please paste the email body to analyse.');
+    shakeBtn();
     return;
   }
 
   const input = { headers, body, sender };
-  const triggered = [];
-  const clean = [];
+  const triggered = [], clean = [];
 
   for (const ind of INDICATORS) {
-    if (ind.check(input)) triggered.push(ind);
-    else clean.push(ind);
+    (ind.check(input) ? triggered : clean).push(ind);
   }
 
-  // Cap score at 100
-  const rawScore = triggered.reduce((sum, i) => sum + i.weight, 0);
-  const score = Math.min(rawScore, 100);
+  const score   = Math.min(triggered.reduce((s, i) => s + i.weight, 0), 100);
   const verdict = getVerdict(score);
+
+  // Update steps
+  document.getElementById('step1').classList.remove('active');
+  document.getElementById('step1').classList.add('done');
+  document.getElementById('step1').querySelector('.step-num').textContent = '✓';
+  document.getElementById('step2').classList.add('done');
+  document.getElementById('step2').querySelector('.step-num').textContent = '✓';
+  document.getElementById('step3').classList.add('active');
 
   renderResults(score, verdict, triggered, clean);
 }
@@ -211,46 +216,51 @@ function analyse() {
 // ─── Render ──────────────────────────────────────────────────────────────────
 
 function renderResults(score, verdict, triggered, clean) {
-  document.querySelector('.input-section').classList.add('hidden');
-  const results = document.getElementById('results');
-  results.classList.remove('hidden');
+  document.getElementById('inputPanel').classList.add('hidden');
+  document.getElementById('resultsPanel').classList.remove('hidden');
 
-  // Score ring animation
-  const ring = document.getElementById('ringFill');
-  const circumference = 314;
-  const offset = circumference - (score / 100) * circumference;
-  setTimeout(() => {
-    ring.style.strokeDashoffset = offset;
-    ring.style.stroke = verdict.color;
-  }, 100);
+  // Verdict banner styling
+  const banner = document.getElementById('verdictBanner');
+  banner.style.background = verdict.bannerBg;
+  banner.style.borderColor = verdict.bannerBorder;
 
-  // Animate score number
-  const scoreEl = document.getElementById('scoreNum');
-  scoreEl.style.color = verdict.color;
-  let current = 0;
-  const step = Math.ceil(score / 40);
-  const timer = setInterval(() => {
-    current = Math.min(current + step, score);
-    scoreEl.textContent = current;
-    if (current >= score) clearInterval(timer);
-  }, 25);
-
-  // Verdict
   document.getElementById('verdictIcon').textContent = verdict.icon;
   document.getElementById('verdictLabel').textContent = verdict.label;
   document.getElementById('verdictLabel').style.color = verdict.color;
   document.getElementById('verdictDesc').textContent = verdict.desc;
 
-  // Finding cards (triggered only)
+  // Score ring
+  const ring = document.getElementById('ringFill');
+  const circumference = 201;
+  setTimeout(() => {
+    ring.style.strokeDashoffset = circumference - (score / 100) * circumference;
+    ring.style.stroke = verdict.color;
+  }, 80);
+
+  // Animate score counter
+  const scoreEl = document.getElementById('scoreNum');
+  scoreEl.style.color = verdict.color;
+  let cur = 0;
+  const step = Math.max(1, Math.ceil(score / 50));
+  const t = setInterval(() => {
+    cur = Math.min(cur + step, score);
+    scoreEl.textContent = cur;
+    if (cur >= score) clearInterval(t);
+  }, 20);
+
+  // Triggered count badge
+  document.getElementById('triggeredCount').textContent = triggered.length;
+
+  // Finding cards
   const grid = document.getElementById('findingsGrid');
   grid.innerHTML = '';
   if (triggered.length === 0) {
-    grid.innerHTML = '<p style="color:var(--muted);font-size:0.9rem;">No phishing indicators triggered.</p>';
+    grid.innerHTML = '<p style="color:var(--text3);font-size:0.85rem;padding:0.5rem 0;">No phishing indicators triggered.</p>';
   } else {
     triggered.forEach((ind, i) => {
       const card = document.createElement('div');
       card.className = `finding-card ${ind.severity}`;
-      card.style.animationDelay = `${i * 0.07}s`;
+      card.style.animationDelay = `${i * 0.06}s`;
       card.innerHTML = `
         <div class="finding-icon">${ind.icon}</div>
         <div>
@@ -261,20 +271,20 @@ function renderResults(score, verdict, triggered, clean) {
     });
   }
 
-  // Indicator breakdown
-  const list = document.getElementById('indicatorList');
-  list.innerHTML = '';
+  // Full indicator table
+  const table = document.getElementById('indicatorList');
+  table.innerHTML = '';
   [...triggered, ...clean].forEach((ind, i) => {
-    const isTriggered = triggered.includes(ind);
-    const item = document.createElement('div');
-    item.className = 'indicator-item';
-    item.style.animationDelay = `${i * 0.04}s`;
-    item.innerHTML = `
-      <div class="indicator-dot ${isTriggered ? 'triggered' : 'clean'}"></div>
-      <span class="indicator-name">${ind.icon} ${ind.name}</span>
-      <span class="indicator-weight">+${ind.weight}pts</span>
-      <span class="badge ${isTriggered ? 'triggered' : 'clean'}">${isTriggered ? 'Triggered' : 'Clear'}</span>`;
-    list.appendChild(item);
+    const hit = triggered.includes(ind);
+    const row = document.createElement('div');
+    row.className = 'indicator-row';
+    row.style.animationDelay = `${i * 0.03}s`;
+    row.innerHTML = `
+      <div class="ind-dot ${hit ? 'triggered' : 'clean'}"></div>
+      <span class="ind-name">${ind.icon} ${ind.name}</span>
+      <span class="ind-weight">+${ind.weight}pts</span>
+      <span class="ind-badge ${hit ? 'triggered' : 'clean'}">${hit ? 'Triggered' : 'Clear'}</span>`;
+    table.appendChild(row);
   });
 }
 
@@ -284,8 +294,42 @@ function reset() {
   document.getElementById('headers').value = '';
   document.getElementById('body').value = '';
   document.getElementById('sender').value = '';
-  document.getElementById('results').classList.add('hidden');
-  document.querySelector('.input-section').classList.remove('hidden');
-  document.getElementById('ringFill').style.strokeDashoffset = '314';
+
+  document.getElementById('resultsPanel').classList.add('hidden');
+  document.getElementById('inputPanel').classList.remove('hidden');
+
+  document.getElementById('ringFill').style.strokeDashoffset = '201';
   document.getElementById('scoreNum').textContent = '0';
+
+  // Reset steps
+  ['step1','step2','step3'].forEach(id => {
+    const el = document.getElementById(id);
+    el.classList.remove('active','done');
+  });
+  document.getElementById('step1').classList.add('active');
+  document.getElementById('step1').querySelector('.step-num').textContent = '1';
+  document.getElementById('step2').querySelector('.step-num').textContent = '2';
+  document.getElementById('step3').querySelector('.step-num').textContent = '3';
+}
+
+// ─── Shake button on empty submit ────────────────────────────────────────────
+
+function shakeBtn() {
+  const btn = document.getElementById('analyseBtn');
+  btn.style.animation = 'none';
+  btn.style.transform = 'translateX(-6px)';
+  setTimeout(() => btn.style.transform = 'translateX(6px)', 80);
+  setTimeout(() => btn.style.transform = 'translateX(-4px)', 160);
+  setTimeout(() => btn.style.transform = 'translateX(0)', 240);
+  setTimeout(() => btn.style.animation = '', 300);
+
+  const bodyField = document.getElementById('body');
+  bodyField.style.borderColor = 'var(--red)';
+  bodyField.style.boxShadow = '0 0 0 3px rgba(239,68,68,0.12)';
+  bodyField.placeholder = '⚠ Please paste the email body first...';
+  setTimeout(() => {
+    bodyField.style.borderColor = '';
+    bodyField.style.boxShadow = '';
+    bodyField.placeholder = 'Paste the full email body here...';
+  }, 2500);
 }
