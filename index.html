@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PhishGuard — Phishing Email Analyser</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <div class="bg-grid"></div>
+
+  <header>
+    <div class="logo">
+      <span class="logo-icon">⚠</span>
+      <span class="logo-text">Phish<span class="accent">Guard</span></span>
+    </div>
+    <p class="tagline">Paste any suspicious email — we'll tear it apart.</p>
+  </header>
+
+  <main>
+    <div class="input-section">
+      <div class="input-group">
+        <label for="headers">Email Headers <span class="optional">(optional but recommended)</span></label>
+        <textarea id="headers" placeholder="Paste raw email headers here...
+e.g.
+From: noreply@github-secure.com
+Received-SPF: fail
+DKIM-Signature: ..."></textarea>
+      </div>
+
+      <div class="input-group">
+        <label for="body">Email Body <span class="required">*</span></label>
+        <textarea id="body" placeholder="Paste the full email body here...
+e.g.
+Subject: [GitHub] Unauthorized access detected
+Dear user, click here immediately to secure your account: http://github-login.xyz/verify"></textarea>
+      </div>
+
+      <div class="input-group">
+        <label for="sender">Sender Address <span class="optional">(optional)</span></label>
+        <input type="text" id="sender" placeholder="e.g. noreply@github-secure.com" />
+      </div>
+
+      <button id="analyseBtn" onclick="analyse()">
+        <span class="btn-icon">🔍</span> Analyse Email
+      </button>
+    </div>
+
+    <div id="results" class="results hidden">
+      <div class="score-card">
+        <div class="score-ring">
+          <svg viewBox="0 0 120 120">
+            <circle class="ring-bg" cx="60" cy="60" r="50"/>
+            <circle class="ring-fill" id="ringFill" cx="60" cy="60" r="50"
+              stroke-dasharray="314"
+              stroke-dashoffset="314"/>
+          </svg>
+          <div class="score-text">
+            <span id="scoreNum">0</span>
+            <small>/100</small>
+          </div>
+        </div>
+        <div class="verdict-box">
+          <div id="verdictIcon" class="verdict-icon">🛡️</div>
+          <div id="verdictLabel" class="verdict-label">Analysing...</div>
+          <div id="verdictDesc" class="verdict-desc"></div>
+        </div>
+      </div>
+
+      <div class="findings-grid" id="findingsGrid"></div>
+
+      <div class="indicators-section">
+        <h3>Indicator Breakdown</h3>
+        <div id="indicatorList" class="indicator-list"></div>
+      </div>
+
+      <button class="reset-btn" onclick="reset()">↩ Analyse Another</button>
+    </div>
+  </main>
+
+  <footer>
+    <p>PhishGuard runs entirely in your browser — no data is sent anywhere.</p>
+    <p>Built by <a href="https://github.com/r4hul-s3thi" target="_blank">r4hul-s3thi</a></p>
+  </footer>
+
+  <script src="analyser.js"></script>
+</body>
+</html>
